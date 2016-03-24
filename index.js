@@ -1,3 +1,6 @@
+/* global require, module */
+/* jslint node: true */
+
 'use strict';
 var path = require('path');
 var fs = require('fs');
@@ -9,10 +12,20 @@ var async = require('async');
 var parents = require('parents');
 var Stream = require('stream');
 var assign = require('object-assign');
+var crypto = require('crypto');
 
 var normalizePath = function(path){
     return path.replace(/\\/g, '/');
 };
+
+var fileCachePath = '.sftp-cache';
+
+function md5Hash(buf) {
+  return crypto
+    .createHash('md5')
+    .update(buf)
+    .digest('hex');
+}
 
 module.exports = function (options) {
     options = assign({}, options);// credit sindresorhus
@@ -43,6 +56,9 @@ module.exports = function (options) {
     //option aliases
     options.password = options.password||options.pass;
     options.username = options.username||options.user||'anonymous';
+
+    // Ignore file cache?
+    options.force = options.force||false;
 
     /*
      * Lots of ways to present key info
@@ -109,6 +125,14 @@ module.exports = function (options) {
     delete options.user;
     delete options.pass;
     delete options.logFiles;
+
+    // load cache
+    var fileCache;
+    try {
+        fileCache = JSON.parse(fs.readFileSync(fileCachePath, 'utf8'));
+    } catch (err) {
+        fileCache = {};
+    }
 
     var mkDirCache = {};
 
@@ -256,6 +280,23 @@ module.exports = function (options) {
                 });
             },function(){
 
+                // Get MD5 hash of file
+                var etag = md5Hash(file.contents);
+
+                // Check if the file has changed OR the force option is true
+                if (!options.force && fileCache[finalRemotePath] === etag) {
+                    if (logFiles) {
+                        gutil.log('gulp-sftp:', gutil.colors.yellow('Cached: ') +
+                            file.relative +
+                            gutil.colors.green(' => ') +
+                            finalRemotePath);
+                    }
+                    return cb();
+                }
+
+                // Store etag in cache object
+                fileCache[finalRemotePath] = etag;
+
                 var stream = sftp.createWriteStream(finalRemotePath,{//REMOTE PATH
                     flags: 'w',
                     encoding: null,
@@ -315,6 +356,10 @@ module.exports = function (options) {
             gutil.log('gulp-sftp:', gutil.colors.yellow('No files uploaded'));
         }
         finished=true;
+
+        // Update the SFTP file cache
+        fs.writeFileSync(fileCachePath, JSON.stringify(fileCache));
+
         if(sftpCache)
             sftpCache.end();
         if(connectionCache)
