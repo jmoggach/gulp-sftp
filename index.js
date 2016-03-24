@@ -18,7 +18,7 @@ var normalizePath = function(path){
     return path.replace(/\\/g, '/');
 };
 
-var fileCachePath = '.sftp-cache';
+var fileCachePath = '.gulp-sftp-cache';
 
 function md5Hash(buf) {
   return crypto
