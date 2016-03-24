@@ -2,7 +2,11 @@
 
 > Upload files via SSH
 
-Useful for uploading and deploying things via sftp. Right now this plugin just uploads everything. Caching and hash comparison are two TODO items.  
+Useful for uploading and deploying things via sftp. Right now this plugin just uploads everything. Caching and hash comparison are two TODO items.
+
+This fork adds a local md5 file cache to prevent unmodified files from being uploaded. This feature is optional.
+
+Thanks to [gulp-awspublish](https://github.com/pgherveou/gulp-awspublish) for the local cache implementation.
 
 [![NPM](https://nodei.co/npm/gulp-sftp.png?downloads=true&stars=true)](https://nodei.co/npm/gulp-sftp/)
 
@@ -24,7 +28,8 @@ gulp.task('default', function () {
 		.pipe(sftp({
 			host: 'website.com',
 			user: 'johndoe',
-			pass: '1234'
+			pass: '1234',
+      force: false
 		}));
 });
 ```
@@ -133,6 +138,12 @@ type `function`
 Default: `null`
 
 Callback function to be called once the SFTP connection is closed.
+
+#### options.force
+type `bool`
+Default: `false`
+
+Set to true to ignore the local file cache and upload everything.
 
 
 ##Authentication
