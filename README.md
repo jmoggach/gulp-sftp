@@ -28,8 +28,7 @@ gulp.task('default', function () {
 		.pipe(sftp({
 			host: 'website.com',
 			user: 'johndoe',
-			pass: '1234',
-      force: false
+			pass: '1234'
 		}));
 });
 ```
