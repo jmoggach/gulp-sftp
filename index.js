@@ -128,6 +128,12 @@ module.exports = function (options) {
 
     // load cache
     var fileCache;
+
+    // Append auth key to cache path
+    if(options.authKey) {
+        fileCachePath += ' - ' + options.authKey;
+    }
+    
     try {
         fileCache = JSON.parse(fs.readFileSync(fileCachePath, 'utf8'));
     } catch (err) {
