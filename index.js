@@ -131,7 +131,7 @@ module.exports = function (options) {
 
     // Append auth key to cache path
     if(options.authKey) {
-        fileCachePath += ' - ' + options.authKey;
+        fileCachePath += '-' + options.authKey;
     }
     
     try {
